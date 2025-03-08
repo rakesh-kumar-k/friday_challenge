@@ -39,7 +39,7 @@ app.add_middleware(
 async def search_movie(request: MovieRequest):
     """
     Endpoint to search for a movie, get its details from Wikipedia,
-    and generate a parody using OpenAI.
+    and generate a parody using Google Gemini.
     """
     movie_name = request.movie_name
     
@@ -53,12 +53,20 @@ async def search_movie(request: MovieRequest):
         if not movie_details:
             raise HTTPException(status_code=404, detail="Movie not found")
         
-        # Generate parody using OpenAI
+        # Generate parody using Google Gemini
         if movie_details.get('plot'):
-            parody = openai_client.generate_parody(
-                movie_details['plot'], 
-                movie_details['title']
-            )
+            plot = movie_details['plot']
+            title = movie_details['title']
+
+            # Extract key details
+            key_details = openai_client.extract_key_details(plot, title)
+
+            # Generate parody
+            parody = openai_client.generate_parody(key_details, title)
+
+            # Review parody (currently using default feedback)
+            parody = openai_client.review_parody(parody)
+
             movie_details['parody'] = parody
         else:
             movie_details['parody'] = "Could not generate parody due to missing plot information."
