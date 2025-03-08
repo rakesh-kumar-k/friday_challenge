@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // API endpoint
-    const API_URL = 'http://localhost:8000/api/search';
+    console.log('DOMContentLoaded event fired');
+    // API endpoint - use environment-specific URL
+    const API_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:8000/api/search'
+        : 'https://movie-parody-generator-backend.onrender.com/api/search';
+    
+    console.log('Using API URL:', API_URL);
     
     // DOM Elements
     const movieInput = document.getElementById('movie-input');
@@ -24,17 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Main search handler
     async function handleSearch() {
+        console.log('handleSearch called');
         const movieName = movieInput.value.trim();
+        console.log('movieName:', movieName);
         
         if (!movieName) {
             showError('Please enter a movie title');
             return;
         }
+        console.log('movieName is valid');
 
         // Reset UI
         hideResults();
         hideError();
         showLoader();
+        console.log('Fetching movie data from API');
 
         try {
             // Call the Python backend API
@@ -45,17 +54,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ movie_name: movieName }),
             });
+            console.log('API response:', response);
             
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.detail || 'Failed to fetch movie data');
             }
+            console.log('API response is ok');
             
             const movieData = await response.json();
+            console.log('movieData:', movieData);
             
             if (!movieData || !movieData.plot) {
                 throw new Error('Could not find movie plot');
             }
+            console.log('movieData has plot');
             
             // Display results
             displayResults(movieData);
@@ -64,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showError(error.message || 'An error occurred. Please try again.');
         } finally {
             hideLoader();
+            console.log('handleSearch finished');
         }
     }
 
