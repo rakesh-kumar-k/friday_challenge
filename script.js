@@ -1,9 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded event fired');
     // API endpoint - use environment-specific URL
-    const API_URL = window.location.hostname === 'localhost' 
-        ? 'http://localhost:8000/api/search'
-        : 'https://movie-parody-generator-backend.onrender.com/api/search';
+    const API_URL ='https://movie-parody-generator-backend.onrender.com/api/search';
     
     console.log('Using API URL:', API_URL);
     
@@ -46,6 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Fetching movie data from API');
 
         try {
+            console.log('Sending request to:', API_URL);
+            console.log('Request payload:', JSON.stringify({ movie_name: movieName }));
+            
             // Call the Python backend API
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -54,12 +55,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ movie_name: movieName }),
             });
-            console.log('API response:', response);
+            console.log('API response status:', response.status);
+            console.log('API response headers:', Object.fromEntries([...response.headers]));
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to fetch movie data');
+                try {
+                    const errorData = await response.json();
+                    console.error('Error data:', errorData);
+                    throw new Error(errorData.detail || 'Failed to fetch movie data');
+                } catch (jsonError) {
+                    console.error('Error parsing error response:', jsonError);
+                    throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+                }
             }
+            
             console.log('API response is ok');
             
             const movieData = await response.json();
